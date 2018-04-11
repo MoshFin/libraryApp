@@ -2,6 +2,8 @@ package com.library.app.category.model.repository;
 
 import com.library.app.category.model.Category;
 import com.library.app.category.repository.CategoryRepository;
+import com.library.app.commontests.utils.DBCommand;
+import com.library.app.commontests.utils.DBCommandTransactionalExecutor;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -17,13 +19,15 @@ import static com.library.app.commontests.category.CategoryForTests.javaCategory
 public class CategoryRepositoryUTest {
     private EntityManagerFactory emf;
     private EntityManager em;
-    CategoryRepository categoryRepository = new CategoryRepository();
-
+    CategoryRepository categoryRepository;
+    private DBCommandTransactionalExecutor executor;
     @Before
     public void initTestCases() {
         emf = Persistence.createEntityManagerFactory("libraryPU");
         em = emf.createEntityManager();
+        categoryRepository = new CategoryRepository();
         categoryRepository.entityManager = em;
+        executor = new DBCommandTransactionalExecutor(em);
     }
 
     @After
@@ -34,20 +38,11 @@ public class CategoryRepositoryUTest {
 
     @Test
     public void entityManagerTestaaminenJaLyödäCategory() {
-        Long categoristaSaattuId = null;
-        try {
-            em.getTransaction().begin();
-            categoristaSaattuId = categoryRepository.add(javaCategory()).getId();
-            assertNotNull(categoristaSaattuId);
-            em.getTransaction().commit();
-            em.clear();
-        } catch (final Exception ex) {
-            fail("This Exception should not be thrown :(");
-            ex.printStackTrace();
-            em.getTransaction().rollback();
+        Long categoristaSaattuId = executor.executeCommand(() ->
+            categoryRepository.add(javaCategory()).getId()
+        );
 
-        }
-
+        assertNotNull(categoristaSaattuId);
         Category category = categoryRepository.findById(categoristaSaattuId);
         assertNotNull(category);
         assertEquals(category.getName(), javaCategory().getName());
