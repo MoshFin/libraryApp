@@ -1,7 +1,10 @@
 package com.library.app.commontests.utils;
 
+import org.junit.Ignore;
+
 import javax.persistence.EntityManager;
 
+@Ignore
 public class DBCommandTransactionalExecutor {
     EntityManager em;
 
